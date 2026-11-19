@@ -1,0 +1,7 @@
+# Құпиялар — ешқашан репозиторийге түспейді
+.env
+*.env
+_src/secrets.json
+flora_care/secrets.json
+backend/server.log
+__pycache__/

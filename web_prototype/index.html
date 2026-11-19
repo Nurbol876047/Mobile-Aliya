@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="kk"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FloraCare</title>
+<style>
+:root{
+  color-scheme:light dark;
+  --pg:#DCE6D9;
+  --bg:#F5F8F3; --surface:#FFFFFF; --surface2:#EDF3EB; --line:#E3EAE0;
+  --text:#17231B; --text2:#6C7D70;
+  --primary:#2F6B4C; --primary-ink:#1E4A34; --primary-soft:#DEEFE4; --primary-bright:#49946B;
+  --amber:#E0A42A; --amber-soft:#FBF1DA; --amber-ink:#8A6512;
+  --clay:#BE6A4C; --clay-soft:#F9E5DC; --clay-ink:#8C4728;
+  --sh1:0 1px 2px rgba(23,35,27,.04),0 6px 16px rgba(23,35,27,.05);
+  --sh2:0 12px 34px rgba(23,35,27,.12);
+  --r-card:22px; --r-ph:18px; --r-btn:16px;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--pg:#0E120D}}
+@media (prefers-color-scheme:dark){body{background:radial-gradient(900px 520px at 50% -8%,#1A2119,#0C100B 72%)}}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,'Noto Sans',system-ui,sans-serif}
+html,body{height:100%}
+body{display:flex;justify-content:center;align-items:center;padding:14px;
+  background:radial-gradient(900px 520px at 50% -8%,#E8F0E5,var(--pg) 70%)}
+
+/* ---------- құрылғы жақтауы ---------- */
+.phone{width:393px;height:min(852px,100%);max-width:100%;background:var(--bg);
+  border-radius:46px;border:8px solid #151A16;position:relative;overflow:hidden;color:var(--text);
+  box-shadow:0 34px 80px rgba(12,22,15,.38),0 0 0 1px rgba(255,255,255,.05) inset}
+.phone.dk{--bg:#121711;--surface:#1B211B;--surface2:#232C23;--line:#2C362D;
+  --text:#E9F0E7;--text2:#9BAA9D;--primary:#5FA87C;--primary-ink:#CFE7D8;--primary-soft:#24392C;
+  --primary-bright:#7CC296;--amber-soft:#3A2F17;--amber-ink:#F0C96A;--clay-soft:#3A271E;--clay-ink:#E8A98A;
+  --sh1:0 1px 2px rgba(0,0,0,.3),0 6px 16px rgba(0,0,0,.25);--sh2:0 12px 34px rgba(0,0,0,.45)}
+.phone.dk .btn{color:#0E1A12}
+.phone.dk .btn.s{color:var(--primary-ink)}
+.phone.dk .btn.d{color:var(--clay-ink)}
+.phone.dk .ic{background:var(--surface)}
+#v{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;
+  padding:42px 18px 112px;scrollbar-width:none}
+#v::-webkit-scrollbar{display:none}
+
+/* ---------- типографика ---------- */
+h1{font-size:25px;font-weight:800;letter-spacing:-.7px;line-height:1.18}
+h3{font-size:16.5px;font-weight:700;letter-spacing:-.35px;margin:24px 0 10px}
+.sub{color:var(--text2);font-size:13px;line-height:1.45}
+
+/* ---------- түймелер ---------- */
+.btn{all:unset;box-sizing:border-box;cursor:pointer;display:flex;justify-content:center;align-items:center;
+  gap:8px;height:52px;padding:0 16px;width:100%;border-radius:var(--r-btn);background:var(--primary);
+  color:#fff;font-weight:650;font-size:15px;letter-spacing:-.2px;
+  box-shadow:0 8px 18px rgba(47,107,76,.22);transition:transform .14s,box-shadow .2s,background .2s,opacity .2s}
+.btn:active{transform:translateY(1px) scale(.994);box-shadow:0 4px 10px rgba(47,107,76,.18)}
+.btn.s{background:var(--primary-soft);color:var(--primary-ink);box-shadow:none}
+.btn.d{background:var(--clay-soft);color:var(--clay-ink);box-shadow:none}
+.ic{width:42px;height:42px;border-radius:50%;background:var(--surface);border:1px solid var(--line);
+  box-shadow:var(--sh1);display:grid;place-items:center;cursor:pointer;font-size:16px;flex:none;
+  transition:transform .14s,background .2s}
+.ic:active{transform:scale(.94)}
+
+/* ---------- карточкалар ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--sh1)}
+.row{display:flex;align-items:center;gap:12px}
+.sp{justify-content:space-between}
+
+/* ---------- фото / плейсхолдер ---------- */
+.ph{position:relative;overflow:hidden;flex:none;border-radius:var(--r-ph);
+  background-color:var(--surface2);background-size:cover;background-position:center}
+.g0{background-image:linear-gradient(145deg,#64A379,#24543A)}
+.g1{background-image:linear-gradient(145deg,#8CBB97,#3C7152)}
+.g2{background-image:linear-gradient(145deg,#A9CBA4,#54855F)}
+.g3{background-image:linear-gradient(145deg,#4F8A64,#1C3F2B)}
+.ph.lf:after{content:"";position:absolute;inset:0;opacity:.16;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 220'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='4' stroke-linecap='round'%3E%3Cpath d='M110 196c0-56 22-90 68-106-6 56-28 90-68 106z'/%3E%3Cpath d='M110 196c0-44-18-72-54-85 5 45 22 72 54 85z'/%3E%3Cpath d='M110 196v-84'/%3E%3Cpath d='M110 150l26-20M110 128l-22-16'/%3E%3C/g%3E%3C/svg%3E");background-size:118% 118%;background-position:58% 62%;background-repeat:no-repeat}
+.ph.hero:before{content:"";position:absolute;inset:0;z-index:1;
+  background:linear-gradient(to top,rgba(9,22,14,.66) 0%,rgba(9,22,14,.18) 42%,rgba(9,22,14,0) 68%)}
+
+/* ---------- белгілер ---------- */
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:650;
+  padding:6px 11px;border-radius:999px;letter-spacing:-.1px;white-space:nowrap}
+.ok{background:var(--primary-soft);color:var(--primary-ink)}
+.wy{background:var(--amber-soft);color:var(--amber-ink)}
+.dg{background:var(--clay-soft);color:var(--clay-ink)}
+.nn{background:var(--surface2);color:var(--text2)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+
+/* ---------- төменгі мәзір ---------- */
+.tabs{position:absolute;left:10px;right:10px;bottom:10px;height:72px;z-index:5;
+  background:color-mix(in srgb,var(--surface) 86%,transparent);backdrop-filter:blur(22px) saturate(150%);
+  border:1px solid var(--line);border-radius:26px;box-shadow:var(--sh2);
+  display:flex;justify-content:space-around;align-items:center}
+.tab{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;width:66px;
+  font-size:10px;font-weight:600;color:var(--text2);transition:color .18s}
+.tab svg{width:22px;height:22px;box-sizing:content-box;padding:5px 14px;border-radius:999px;
+  transition:background .22s,color .22s}
+.tab.on{color:var(--primary-ink);font-weight:700}
+.tab.on svg{background:var(--primary-soft);color:var(--primary)}
+
+/* ---------- чиптер ---------- */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:14px 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{all:unset;cursor:pointer;white-space:nowrap;font-size:12.5px;font-weight:600;padding:9px 14px;
+  border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--text2);transition:.18s}
+.chip.on{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* ---------- формалар ---------- */
+input,textarea,select{all:unset;box-sizing:border-box;width:100%;background:var(--surface);
+  border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-top:6px;font-size:14.5px;
+  color:var(--text);font-family:inherit;transition:border-color .18s,box-shadow .18s}
+input:focus,textarea:focus,select:focus{border-color:var(--primary-bright);
+  box-shadow:0 0 0 3px rgba(73,148,107,.16)}
+textarea{min-height:92px;white-space:pre-wrap;line-height:1.45}
+input::placeholder,textarea::placeholder{color:var(--text2)}
+#fi{display:none!important}
+.lab{font-size:12.5px;font-weight:650;margin-top:16px;color:var(--primary-ink);letter-spacing:-.1px}
+
+/* ---------- статистика ---------- */
+.stat{flex:1;padding:15px 8px;text-align:center}
+.stat b{display:block;font-size:24px;font-weight:800;letter-spacing:-.6px}
+.stat span{font-size:10.5px;color:var(--text2);display:block;margin-top:3px;line-height:1.25}
+
+/* ---------- тізімдер ---------- */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid.l{grid-template-columns:1fr}
+.pc{padding:8px;cursor:pointer;transition:transform .14s,box-shadow .2s}
+.pc:active{transform:scale(.985)}
+.pc .ph{height:116px;margin-bottom:10px}
+.pc b{font-size:14.5px;display:block;letter-spacing:-.25px}
+.pc small{font-size:11.5px;color:var(--text2);display:block;margin:3px 0 7px}
+.l .pc{display:flex;gap:12px;align-items:center;padding:10px}
+.l .pc .ph{width:88px;height:88px;margin:0;border-radius:15px}
+
+/* ---------- прогресс ---------- */
+.bar{height:8px;border-radius:999px;background:var(--surface2);overflow:hidden;margin-top:7px}
+.bar i{display:block;height:100%;border-radius:999px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+
+/* ---------- баптаулар ---------- */
+.set{padding:15px 16px;display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid var(--line);font-size:14.5px;font-weight:600;cursor:pointer;color:var(--text)}
+.set:last-child{border:0}
+.set span{color:var(--text2);font-weight:500;font-size:13.5px}
+
+/* ---------- қосымша ---------- */
+.toast{position:absolute;top:14px;left:16px;right:16px;z-index:9;background:var(--primary-ink);color:#fff;
+  padding:13px 16px;border-radius:16px;font-size:13.5px;font-weight:600;box-shadow:var(--sh2);
+  transform:translateY(-120px);transition:transform .38s cubic-bezier(.2,.9,.3,1.2)}
+.toast.on{transform:none}
+.phone.dk .toast{background:var(--primary);color:#0E1A12}
+.drop{height:200px;border:1.5px dashed var(--primary-bright);background:var(--surface2);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  color:var(--primary-ink);font-weight:650;font-size:13.5px;box-shadow:none}
+.empty{text-align:center;padding:38px 20px}
+
+/* ---------- ЖИ талдауы ---------- */
+.ai-tag{display:inline-flex;gap:6px;align-items:center;font-size:10.5px;font-weight:750;letter-spacing:.4px;
+  text-transform:uppercase;color:var(--primary);background:var(--primary-soft);padding:5px 9px;border-radius:999px}
+.ai-mini{font-size:12px;color:var(--text2);margin-top:6px;line-height:1.35}
+.ring{--p:70;--rc:var(--primary);width:64px;height:64px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:radial-gradient(closest-side,var(--surface) 78%,transparent 80% 100%),conic-gradient(var(--rc) calc(var(--p)*1%),var(--surface2) 0)}
+.ring span{font-weight:800;font-size:18px;letter-spacing:-.5px}
+.li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.45;margin-top:8px}
+.li i{flex:none;width:20px;height:20px;border-radius:50%;background:var(--primary-soft);color:var(--primary);
+  display:grid;place-items:center;font-size:11px;font-style:normal;font-weight:750;margin-top:1px}
+.spin{width:24px;height:24px;border-radius:50%;border:2.5px solid var(--primary-soft);border-top-color:var(--primary);
+  animation:spn .8s linear infinite;flex:none}
+@keyframes spn{to{transform:rotate(360deg)}}
+.shim{height:11px;border-radius:8px;margin-top:12px;background:linear-gradient(90deg,var(--surface2) 0%,var(--line) 50%,var(--surface2) 100%);
+  background-size:200% 100%;animation:shm 1.3s ease-in-out infinite}
+@keyframes shm{to{background-position:-200% 0}}
+
+.kv{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.kv span{color:var(--text2);flex:none}.kv b{text-align:right;font-weight:650}
+.note{display:flex;flex-direction:column;gap:3px;margin-top:10px;padding:11px 13px;border-radius:14px;font-size:13px;line-height:1.45}
+.note b{font-size:12px}.ok-note{background:var(--primary-soft);color:var(--primary-ink)}.wy-note{background:var(--amber-soft);color:var(--amber-ink)}
+.care{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ci{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px;box-shadow:var(--sh1)}
+.cih{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--primary-ink)}
+.cih span{font-size:16px}.ci p{margin-top:6px;font-size:12.5px;line-height:1.45;color:var(--text)}
+</style></head><body>
+<div class="phone" id="ph"><div class="toast" id="toast"></div><div id="v"></div>
+<div class="tabs" id="tabs"></div>
+<input type="file" id="fi" accept="image/*" hidden></div>
+<script>
+const $=id=>document.getElementById(id);
+const M=['қаңтар','ақпан','наурыз','сәуір','мамыр','маусым','шілде','тамыз','қыркүйек','қазан','қараша','желтоқсан'];
+const fd=s=>{const d=new Date(s);return d.getDate()+' '+M[d.getMonth()]+' '+d.getFullYear()};
+const today=()=>new Date().toISOString().slice(0,10);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ST={ok:'Дені сау',wy:'Өзгерістер байқалды',dg:'Назар аудару қажет',nn:'Әлі тексерілмеген'};
+const RES={ok:'Қалыпты түс',wy:'Түсінің өзгеруі байқалды',dg:'Қоңырлану белгілері'};
+const bd=s=>`<span class="badge ${s}"><i class="dot"></i>${ST[s]}</span>`;
+let S={plants:[],obs:[],nid:1,seen:0,dark:0};
+try{const r=localStorage.getItem('fc');if(r)S=JSON.parse(r)}catch(e){}
+(function cleanup(){const demo={1:'Монстера',2:'Сансевиерия',3:'Фикус'};
+ const gone=S.plants.filter(p=>demo[p.id]===p.name).map(p=>p.id);
+ S.plants=S.plants.filter(p=>!gone.includes(p.id));S.obs=S.obs.filter(o=>!gone.includes(o.pid)&&!(o.id<=2&&!o.photo&&!o.ai));
+ // ешқашан талданбаған өсімдікке «дені сау» деп жазбаймыз
+ S.plants.forEach(p=>{const os=S.obs.filter(o=>o.pid==p.id&&o.ai);if(!os.length){p.status='nn';p.last=''}});
+ if(!S.nid||S.nid<1)S.nid=1;try{localStorage.setItem('fc',JSON.stringify(S))}catch(e){}})();
+const lastTxt=p=>p.last?'Соңғы бақылау: '+fd(p.last):'Әлі бақылау жоқ';
+const save=()=>{try{localStorage.setItem('fc',JSON.stringify(S))}catch(e){toast('Жад толды: фото сақталмады')}};
+let V='home',vw=0,flt='all',q='',dq='',dflt='all',cur=null,obi=0,tmp={photo:'',ai:null,pid:null,note:'',busy:0},form={};
+const I={home:'<path d="M3 11l9-8 9 8M5 10v10h14V10"/>',plants:'<path d="M12 21V11M12 15c-5 0-8-3-8-8 5 0 8 3 8 8Zm0-3c0-4 3-7 8-7 0 5-3 7-8 7Z"/>',analyze:'<circle cx="12" cy="12" r="4"/><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/>',diary:'<path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2V4ZM9 9h6M9 13h6"/>',profile:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>'};
+const TL={home:'Басты бет',plants:'Өсімдіктерім',analyze:'Талдау',diary:'Күнделік',profile:'Профиль'};
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2000)}
+function go(v,p){V=v;if(p!==undefined)cur=p;render();$('v').scrollTop=0}
+const ph=(p,c)=>`<div class="ph ${p.photo?'':'g'+(p.id%4)+' lf'} ${c||''}" style="${p.photo?`background-image:url(${p.photo})`:''}"></div>`;
+function pcard(p){return `<div class="card pc" onclick="go('detail',${p.id})">${ph(p)}<div><b>${esc(p.name)}</b><small>${esc(p.species)||'—'}</small>${bd(p.status)}<small style="margin-top:6px">${lastTxt(p)}</small></div></div>`}
+function render(){
+ const main=['home','plants','analyze','diary','profile'];
+ $('tabs').style.display=main.includes(V)?'flex':'none';
+ $('tabs').innerHTML=main.map(k=>`<button class="tab ${k===V?'on':''}" onclick="go('${k}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${I[k]}</svg>${TL[k]}</button>`).join('');
+ $('ph').classList.toggle('dk',!!S.dark);
+ if(!S.seen){$('tabs').style.display='none';return $('v').innerHTML=onb()}
+ $('v').innerHTML=({home,plants,add,analyze,diary,detail,profile})[V]();
+}
+function onb(){const O=[['Өсімдіктеріңізді бақылаңыз','Әр өсімдіктің жағдайын суреттер арқылы бақылаңыз','g0'],['Өзгерістерді анықтаңыз','Жапырақ түсін талдап, өзгерістерді байқаңыз','g1'],['Өсу тарихын сақтаңыз','Өсімдіктеріңіздің даму тарихын бір жерде сақтаңыз','g3']][obi];
+ return `<div class="row sp"><b style="color:var(--primary-ink);font-size:20px">FloraCare</b><span class="sub" style="cursor:pointer" onclick="S.seen=1;save();render()">Өткізіп жіберу</span></div><div class="ph lf ${O[2]}" style="height:400px;border-radius:34px;margin:20px 0"></div><div class="row" style="justify-content:center;gap:6px;margin-bottom:18px">${[0,1,2].map(i=>`<i style="height:8px;border-radius:9px;background:${i==obi?'var(--primary-bright)':'var(--surface2)'};width:${i==obi?26:8}px"></i>`).join('')}</div><h1 style="text-align:center">${O[0]}</h1><p class="sub" style="text-align:center;margin:8px 0 22px">${O[1]}</p><button class="btn" onclick="if(obi<2){obi++}else{S.seen=1;save()}render()">${obi==2?'Бастау':'Келесі'}</button>`}
+function home(){const n=S.plants.length,ok=S.plants.filter(p=>p.status=='ok').length,att=S.plants.filter(p=>p.status=='wy'||p.status=='dg').length,rec=[...S.obs].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,3);
+ const hero=S.plants[0];
+ return `<div class="row sp"><div><p class="sub">Қайырлы күн!</p><h1 style="font-size:23px">Өсімдіктеріңіз қалай?</h1></div><div class="ic" onclick="toast(n_msg())">🔔</div></div>
+ ${hero?`<div class="ph lf hero ${hero.photo?'':'g0'}" style="height:200px;margin-top:18px;border-radius:28px;${hero.photo?`background-image:url(${hero.photo})`:''}"><div style="position:absolute;left:18px;bottom:16px;color:#fff;z-index:2"><b style="font-size:20px">${esc(hero.name)}</b><div style="font-size:13px;opacity:.9">${lastTxt(hero)}</div></div></div>`:`<div class="card" style="padding:22px;margin-top:18px;text-align:center"><div style="font-size:34px">📷</div><b style="display:block;font-size:17px;margin-top:6px">Өсімдікті сканерлеңіз</b><p class="sub" style="margin:6px 0 14px">Жапырақты суретке түсіріңіз — ЖИ оның жағдайын бағалайды. Нәтижені бірден күнделікке сақтауға болады.</p><button class="btn" onclick="go('analyze')">✦ Фото сканерлеу</button><button class="btn s" style="margin-top:10px" onclick="form={};go('add')">＋ Өсімдікті қолмен қосу</button></div>`}
+ <div class="row" style="margin-top:14px"><div class="card stat"><b>${n}</b><span>Барлық өсімдік</span></div><div class="card stat"><b style="color:var(--primary-bright)">${ok}</b><span>Дені сау</span></div><div class="card stat"><b style="color:var(--clay)">${att}</b><span>Назар аудару қажет</span></div></div>
+ <h3>Соңғы бақылаулар</h3>${rec.length?rec.map(o=>{const p=S.plants.find(x=>x.id==o.pid)||{};return `<div class="card row" style="padding:10px;margin-bottom:10px" onclick="go('detail',${p.id})">${ph(p,'')}<div style="flex:1"><b>${esc(p.name)}</b><div class="sub" style="margin:2px 0 6px">${fd(o.date)}</div>${bd(o.status)}</div></div>`}).join('').replace(/class="ph /g,'style="width:62px;height:62px;border-radius:14px" class="ph '):`<div class="card empty sub">Әзірге бақылау жоқ</div>`}
+ ${n?`<button class="btn" style="margin-top:8px" onclick="go('analyze')">✦ Фото сканерлеу</button><button class="btn s" style="margin-top:10px" onclick="form={};go('add')">＋ Өсімдік қосу</button>`:''}`}
+function n_msg(){if(!S.plants.length)return 'Әзірге өсімдік жоқ';const x=S.plants.filter(p=>p.status=='wy'||p.status=='dg').length;return x?`${x} өсімдікке назар аудару қажет`:'Барлық өсімдік дені сау 🌿'}
+function plants(){let L=S.plants.filter(p=>(flt=='all'||p.status==flt)&&(p.name+p.species).toLowerCase().includes(q.toLowerCase()));
+ return `<div class="row sp"><h1>Өсімдіктерім</h1><div class="row" style="gap:8px"><div class="ic" onclick="vw=0;render()">▦</div><div class="ic" onclick="vw=1;render()">☰</div></div></div>
+ <input placeholder="🔍 Өсімдікті іздеу..." value="${esc(q)}" oninput="q=this.value;keep(plants)" style="margin-top:14px">
+ <div class="chips">${[['all','Барлығы'],['ok','Дені сау'],['wy','Өзгерістер байқалды'],['dg','Назар аудару қажет'],['nn','Тексерілмеген']].map(([k,t])=>`<button class="chip ${flt==k?'on':''}" onclick="flt='${k}';render()">${t}</button>`).join('')}</div>
+ <div class="grid ${vw?'l':''}" id="lst">${L.map(pcard).join('')||'<div class="card empty sub" style="grid-column:1/-1">Өсімдік табылмады</div>'}</div>
+ <button class="btn" style="margin-top:16px" onclick="form={};go('add')">＋ Өсімдік қосу</button>`}
+function keep(f){const el=document.activeElement,pos=el.selectionStart;render();const i=$('v').querySelector('input');i.focus();i.setSelectionRange(pos,pos)}
+function add(){return `<div class="row"><div class="ic" onclick="go('plants')">‹</div><h1 style="font-size:23px">Жаңа өсімдік қосу</h1></div>
+ <div class="card drop ph" style="margin-top:18px;${form.photo?`background-image:url(${form.photo});border:0`:''}" onclick="pick('add')">${form.photo?'':'<span style="font-size:28px">📷</span><span>Фото қосу</span>'}</div>
+ <div class="lab">Өсімдіктің атауы</div><input id="a1" placeholder="Мысалы, Монстера" value="${esc(form.name)}">
+ <div class="lab">Өсімдік түрі</div><input id="a2" placeholder="Monstera deliciosa" value="${esc(form.species)}">
+ <div class="lab">Қосылған күні</div><input id="a3" type="date" value="${form.date||today()}">
+ <div class="lab">Сипаттама</div><textarea id="a4" placeholder="Орналасқан жері, суару жиілігі...">${esc(form.desc)}</textarea>
+ <button class="btn" style="margin-top:20px" onclick="addP()">Сақтау</button>`}
+function fv(){form.name=$('a1').value;form.species=$('a2').value;form.date=$('a3').value;form.desc=$('a4').value}
+function addP(){fv();if(!form.name.trim())return toast('Атауын енгізіңіз');const id=S.nid++;S.plants.unshift({id,name:form.name.trim(),species:form.species,date:form.date||today(),desc:form.desc,photo:form.photo||'',status:'nn',last:''});save();form={};toast('Өсімдік сақталды ✓');go('plants')}
+function pick(t){$('fi').dataset.t=t;$('fi').value='';$('fi').click()}
+$('fi').onchange=e=>{const f=e.target.files[0];if(!f)return;const t=e.target.dataset.t,r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,640/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);const u=c.toDataURL('image/jpeg',.8);
+ if(t=='add'){fv();form.photo=u;render()}else if(t=='an'){tmp.photo=u;tmp.ai=null;render()}else{const p=S.plants.find(x=>x.id==cur);p.photo=u;save();render()}};im.src=r.result};r.readAsDataURL(f)};
+const AIS={healthy:'ok',warning:'wy',critical:'dg'};
+const RC={ok:'var(--primary-bright)',wy:'var(--amber)',dg:'var(--clay)'};
+const URG={low:'Шұғыл емес',medium:'Жақын күндері',high:'Шұғыл әрекет қажет'};
+let AI_ON=null;
+fetch('/api/health').then(r=>r.json()).then(j=>{AI_ON=!!j.ai;if(V=='analyze')render()}).catch(()=>{AI_ON=false;if(V=='analyze')render()});
+function li(arr,num){return arr.map((t,i)=>`<div class="li"><i>${num?i+1:'•'}</i><span>${esc(t)}</span></div>`).join('')}
+function bars(g,y,b){return [['Сау жасыл',g,'var(--primary-bright)'],['Сарғаю',y,'var(--amber)'],['Қоңырлану',b,'var(--clay)']].map(([t,v,c])=>`<div class="row sp sub" style="margin-top:12px"><span>${t}</span><b style="color:var(--text)">${Math.round(v)}%</b></div><div class="bar"><i style="width:${v}%;background:${c}"></i></div>`).join('')}
+const CARE=[['light','☀️','Жарық'],['watering','💧','Суару'],['temperature','🌡️','Температура'],['humidity','💨','Ылғалдылық'],['soil','🪴','Топырақ'],['fertilizer','🧪','Тыңайтқыш']];
+function infoRow(k,v){return v?`<div class="kv"><span>${k}</span><b>${esc(v)}</b></div>`:''}
+function careGrid(c){if(!c||!CARE.some(([k])=>c[k]))return '';return `<div class="care">${CARE.filter(([k])=>c[k]).map(([k,i,t])=>`<div class="ci"><div class="cih"><span>${i}</span>${t}</div><p>${esc(c[k])}</p></div>`).join('')}</div>`}
+function aiCard(a){
+ if(a.loading)return `<h3>Талдау нәтижесі</h3><div class="card" style="padding:18px"><div class="row"><div class="spin"></div><div><b>Сурет талдануда…</b><div class="sub">Әдетте 5–15 секунд</div></div></div><div class="shim" style="width:92%"></div><div class="shim" style="width:70%"></div><div class="shim" style="width:84%"></div></div>`;
+ if(a.error)return `<h3>Талдау нәтижесі</h3><div class="card" style="padding:16px;background:var(--amber-soft);border-color:transparent"><b style="color:var(--amber-ink)">Талдау орындалмады</b><p class="sub" style="margin-top:4px">${esc(a.error)}</p><button class="btn s" style="margin-top:12px;height:44px;font-size:14px" onclick="retryAI()">↻ Қайталау</button></div>`;
+ const x=a.result,k=AIS[x.status],pi=x.plant_info||{},hasInfo=x.is_plant&&Object.values(pi).some(Boolean);
+ return `<h3>Талдау нәтижесі</h3><div class="card" style="padding:16px">
+ <div class="row sp" style="align-items:flex-start"><div style="flex:1;min-width:0"><span class="ai-tag">✦ ЖИ талдауы</span><b style="font-size:18px;display:block;margin-top:8px;letter-spacing:-.3px">${esc(x.diagnosis||RES[k])}</b>${x.plant_name?`<div class="sub">${esc(x.plant_name)}</div>`:''}</div>
+ <div class="ring" style="--p:${x.health_score};--rc:${RC[k]}"><span>${x.health_score}</span></div></div>
+ <div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap">${bd(k)}<span class="badge" style="background:var(--surface2);color:var(--text2)">${URG[x.urgency]}</span>${x.is_plant?`<span class="badge" style="background:var(--surface2);color:var(--text2)">📅 Келесі тексеру: ${x.next_check_days} күннен кейін</span>`:''}</div>
+ ${!x.is_plant||x.photo_quality_note?`<p class="sub" style="margin-top:10px;color:var(--amber-ink)">⚠ ${esc(x.photo_quality_note||'Суретте өсімдік анық көрінбейді')}</p>`:''}
+ ${x.summary?`<p style="margin-top:12px;font-size:14px;line-height:1.55">${esc(x.summary)}</p>`:''}
+ <div class="lab">Жапырақ түсінің жіктелуі</div>${bars(x.green_pct,x.yellow_pct,x.brown_pct)}
+ ${x.color_explanation?`<p class="sub" style="margin-top:10px;line-height:1.5">${esc(x.color_explanation)}</p>`:''}
+ ${x.symptoms.length?`<div class="lab">Байқалған белгілер</div>${li(x.symptoms)}`:''}
+ ${x.causes.length?`<div class="lab">Ықтимал себептер</div>${li(x.causes)}`:''}
+ ${x.advice.length?`<div class="lab">Не істеу керек</div>${li(x.advice,1)}`:''}
+ ${x.prognosis?`<div class="lab">Болжам</div><p style="margin-top:6px;font-size:13.5px;line-height:1.5">${esc(x.prognosis)}</p>`:''}
+ <div class="sub" style="margin-top:14px;font-size:11.5px">Сенімділік ${Math.round(x.confidence*100)}% · ${(a.ms/1000).toFixed(1)} с</div></div>
+ ${hasInfo?`<h3>Өсімдік туралы</h3><div class="card" style="padding:16px">${infoRow('Латынша атауы',pi.latin_name)}${infoRow('Тұқымдасы',pi.family)}${infoRow('Отаны',pi.origin)}
+  ${pi.description?`<p style="margin-top:10px;font-size:13.5px;line-height:1.55">${esc(pi.description)}</p>`:''}
+  ${pi.toxicity?`<div class="note wy-note"><b>⚠ Уыттылығы</b><span>${esc(pi.toxicity)}</span></div>`:''}
+  ${pi.fun_fact?`<div class="note ok-note"><b>💡 Қызықты дерек</b><span>${esc(pi.fun_fact)}</span></div>`:''}</div>`:''}
+ ${x.is_plant&&careGrid(x.care)?`<h3>Күтім талаптары</h3>${careGrid(x.care)}`:''}`}
+function plantGuess(a){const raw=(a&&a.is_plant&&a.plant_name)||'';const m=raw.match(/^(.*?)\s*\(([^)]*)\)\s*$/);
+ const name=(m?m[1]:raw).replace(/^Пайдаланушы айтқан:\s*/,'').trim(),sp=m?m[2].trim():'';return{name:name.slice(0,60),species:sp.slice(0,60)}}
+function analyze(){const a=tmp.ai,res=a&&a.result,tgt=tmp.target??(tmp.pid||'new');
+ return `<h1>Өсімдікті сканерлеу</h1><p class="sub" style="margin-top:4px">Жапырақты суретке түсіріңіз — ЖИ жағдайын бағалайды</p>
+ <div class="card drop ph" style="margin-top:16px;height:260px;${tmp.photo?`background-image:url(${tmp.photo});border:0`:''}" onclick="pick('an')">${tmp.photo?'':'<span style="font-size:34px">📷</span><span>Фото түсіру немесе таңдау</span><span class="sub" style="font-weight:500">JPG, PNG, WEBP · 10 МБ дейін</span>'}</div>
+ <div class="row" style="margin-top:12px"><button class="btn s" style="font-size:14px" onclick="cam()">📷 Камерадан</button><button class="btn s" style="font-size:14px" onclick="pick('an')">🖼 Галереядан</button></div>
+ ${S.plants.length?`<div class="lab">Өсімдік <span style="font-weight:500;color:var(--text2)">(міндетті емес — ЖИ-ге контекст)</span></div><select id="sp" onchange="tmp.pid=+this.value||null;tmp.target=undefined"><option value="">— Таңдалмаған —</option>${S.plants.map(p=>`<option value="${p.id}" ${tmp.pid==p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select>`:''}
+ <button class="btn" style="margin-top:14px;${tmp.busy||!tmp.photo||AI_ON===false?'opacity:.55;pointer-events:none':''}" onclick="runA()">${tmp.busy?'Сканерленуде…':'✦ Сканерлеу'}</button>
+ <p class="sub" style="margin-top:8px;text-align:center;font-size:12px">${AI_ON===false?'ЖИ сервері қолжетімсіз — backend/server.py іске қосыңыз':tmp.photo?'Талдауды FloraCare ЖИ жасайды':'Алдымен фото таңдаңыз'}</p>
+ ${a?aiCard(a):''}
+ ${res?`<div class="card" style="padding:16px;margin-top:14px"><div class="lab" style="margin-top:0">Қай өсімдікке сақтау?</div>
+ <select id="sv" onchange="tmp.target=this.value=='new'?'new':+this.value;render();$('v').scrollTop=9999">${S.plants.map(p=>`<option value="${p.id}" ${tgt==p.id?'selected':''}>${esc(p.name)}</option>`).join('')}<option value="new" ${tgt=='new'?'selected':''}>＋ Жаңа өсімдік қосу</option></select>
+ ${tgt=='new'?`<div class="lab">Жаңа өсімдік атауы</div><input id="nn" maxlength="60" placeholder="Мысалы, Фикус" value="${esc(tmp.newName||'')}" oninput="tmp.newName=this.value">${tmp.newSpecies?`<p class="sub" style="margin-top:6px;font-size:12px">Түрі (ЖИ анықтады): ${esc(tmp.newSpecies)}</p>`:''}`:''}
+ <div class="lab">Жазба <span style="font-weight:500;color:var(--text2)">(міндетті емес)</span></div><textarea id="nt" placeholder="Қысқаша жазба..." oninput="tmp.note=this.value">${esc(tmp.note||'')}</textarea>
+ <button class="btn" style="margin-top:12px" onclick="saveO()">Күнделікке сақтау</button></div>`:''}`}
+function cam(){const f=$('fi');f.setAttribute('capture','environment');pick('an');setTimeout(()=>f.removeAttribute('capture'),500)}
+async function runAI(){const p=S.plants.find(x=>x.id==tmp.pid);
+ try{const r=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:tmp.photo,plant:p?p.name:'',species:p?p.species:''})});
+   const j=await r.json();tmp.ai=j.ok?{result:j.result,model:j.model,ms:j.ms}:{error:j.error||'Белгісіз қате'}}
+ catch(e){tmp.ai={error:'Серверге қосылу мүмкін болмады (backend/server.py іске қосылған ба?)'}}
+ if(tmp.ai.result){const g=plantGuess(tmp.ai.result);tmp.newName=g.name;tmp.newSpecies=g.species;tmp.target=undefined}}
+async function retryAI(){if(tmp.busy||!tmp.photo)return;tmp.busy=1;tmp.ai={loading:1};render();
+ await runAI();tmp.busy=0;if(V=='analyze')render()}
+async function runA(){if(!tmp.photo)return toast('Алдымен фото таңдаңыз');if(tmp.busy)return;
+ if(AI_ON===false){tmp.ai={error:'ЖИ сервері қолжетімсіз. backend/server.py іске қосылғанын тексеріңіз.'};return render()}
+ tmp.busy=1;tmp.ai={loading:1};render();$('v').scrollTop=9999;
+ await runAI();
+ tmp.busy=0;if(V=='analyze'){render();$('v').scrollTop=9999}}
+function saveO(){const a=tmp.ai&&tmp.ai.result;if(!a)return toast('Алдымен сканерлеңіз');
+ const tgt=tmp.target??(tmp.pid||'new');let p;
+ if(tgt=='new'){const nm=(tmp.newName||'').trim();if(!nm)return toast('Өсімдік атауын енгізіңіз');if(nm.length>60)return toast('Атау 60 таңбадан аспауы керек');
+  p={id:S.nid++,name:nm,species:tmp.newSpecies||'',date:today(),desc:'',photo:'',status:'nn',last:''};S.plants.unshift(p)}
+ else p=S.plants.find(x=>x.id==+tgt);
+ if(!p)return toast('Өсімдікті таңдаңыз');
+ const st=AIS[a.status],g=Math.round(a.green_pct);
+ S.obs.push({id:S.nid++,pid:p.id,date:today(),status:st,note:(tmp.note||'').trim(),photo:tmp.photo,g,ai:{d:a.diagnosis,s:a.summary,adv:a.advice.slice(0,6),sc:a.health_score,prog:a.prognosis||'',care:a.is_plant?a.care:null,info:a.is_plant?a.plant_info:null,next:a.is_plant?a.next_check_days:null}});
+ p.status=st;p.last=today();if(!p.photo)p.photo=tmp.photo;
+ save();tmp={photo:'',ai:null,pid:null,note:'',busy:0};toast('Күнделікке сақталды ✓');go('detail',p.id)}
+function diary(){let L=[...S.obs].sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).filter(o=>{const p=S.plants.find(x=>x.id==o.pid)||{name:''};return(dflt=='all'||o.status==dflt)&&(p.name+o.note).toLowerCase().includes(dq.toLowerCase())});
+ return `<h1>Бақылау күнделігі</h1><input placeholder="🔍 Жазбаларды іздеу..." value="${esc(dq)}" oninput="dq=this.value;keep()" style="margin-top:14px">
+ <div class="chips">${[['all','Барлығы'],['ok','Дені сау'],['wy','Өзгерістер байқалды'],['dg','Назар аудару қажет']].map(([k,t])=>`<button class="chip ${dflt==k?'on':''}" onclick="dflt='${k}';render()">${t}</button>`).join('')}</div>
+ ${L.map(o=>{const p=S.plants.find(x=>x.id==o.pid)||{name:'—',id:0};return `<div class="card" style="padding:12px;margin-bottom:12px"><div class="row"><div class="ph ${o.photo?'':'g'+(p.id%4)+' lf'}" style="width:70px;height:70px;${o.photo?`background-image:url(${o.photo})`:''}"></div><div><b>${esc(p.name)}</b><div class="sub" style="margin:2px 0 6px">${fd(o.date)}</div>${bd(o.status)}${o.ai?`<div class="ai-mini">✦ ${esc(o.ai.d)}</div>`:''}</div></div>${o.note?`<p class="sub" style="margin-top:10px">${esc(o.note)}</p>`:''}</div>`}).join('')||'<div class="card empty sub">Жазба жоқ</div>'}`}
+function detail(){const p=S.plants.find(x=>x.id==cur);if(!p)return plants();const os=S.obs.filter(o=>o.pid==p.id).sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
+ return `<div class="row"><div class="ic" onclick="go('plants')">‹</div></div><div class="ph lf ${p.photo?'':'g'+(p.id%4)}" style="height:260px;margin-top:12px;border-radius:30px;${p.photo?`background-image:url(${p.photo})`:''}" onclick="pick('ph')"></div>
+ <div class="card" style="padding:16px 16px 18px;margin-top:-28px;position:relative;z-index:3"><div class="row sp"><div><h1 style="font-size:23px">${esc(p.name)}</h1><div class="sub">${esc(p.species)||'—'}</div></div>${bd(p.status)}</div></div>
+ <h3>Өсімдік туралы</h3><p class="sub">${esc(p.desc)||'Сипаттама жоқ'} Қосылған күні: ${fd(p.date)}.</p>
+ <h3>Соңғы бақылау</h3>${p.last?`<div class="card row sp" style="padding:14px">${bd(p.status)}<span class="sub">${fd(p.last)}</span></div>`:`<div class="card sub" style="padding:14px">Әлі талданбаған — «Жаңа фото қосу» арқылы ЖИ-ге талдатыңыз.</div>`}
+ ${(()=>{const la=[...os].reverse().find(o=>o.ai);if(!la)return '';const A=la.ai;
+ const nd=A.next?new Date(new Date(la.date).getTime()+A.next*864e5):null;
+ return `<h3>ЖИ кеңесі</h3><div class="card" style="padding:16px"><div class="row sp"><span class="ai-tag">✦ ЖИ · ${fd(la.date)}</span><b style="color:var(--text2);font-size:13px">${A.sc}/100</b></div><b style="display:block;margin-top:10px">${esc(A.d)}</b><p class="sub" style="margin-top:4px">${esc(A.s)}</p>${li(A.adv||[],1)}${A.prog?`<div class="lab">Болжам</div><p style="margin-top:6px;font-size:13.5px">${esc(A.prog)}</p>`:''}${nd?`<div class="note ok-note" style="margin-top:12px"><b>📅 Келесі тексеру</b><span>${fd(nd.toISOString().slice(0,10))}</span></div>`:''}</div>
+ ${A.info&&A.info.description?`<h3>Өсімдік туралы</h3><div class="card" style="padding:16px">${infoRow('Латынша атауы',A.info.latin_name)}${infoRow('Тұқымдасы',A.info.family)}${infoRow('Отаны',A.info.origin)}<p style="margin-top:10px;font-size:13.5px;line-height:1.55">${esc(A.info.description)}</p>${A.info.toxicity?`<div class="note wy-note"><b>⚠ Уыттылығы</b><span>${esc(A.info.toxicity)}</span></div>`:''}</div>`:''}
+ ${A.care&&careGrid(A.care)?`<h3>Күтім талаптары</h3>${careGrid(A.care)}`:''}`})()}<h3>Өзгерістер тарихы</h3><div class="card" style="padding:16px">${os.filter(o=>typeof o.g=='number').length?`<div class="row" style="align-items:flex-end;height:90px;gap:8px">${os.filter(o=>typeof o.g=='number').slice(-8).map(o=>`<div style="flex:1;text-align:center"><div style="height:${Math.max(6,o.g*.7)}px;border-radius:8px;background:${o.status=='ok'?'var(--primary-bright)':o.status=='wy'?'var(--amber)':'var(--clay)'}"></div><div style="font-size:9px;color:var(--text2);margin-top:4px">${new Date(o.date).getDate()}.${new Date(o.date).getMonth()+1}</div></div>`).join('')}</div>`:'<span class="sub">Әзірге ЖИ талдауы жоқ</span>'}</div>
+ <h3>Фотосуреттер</h3><div class="row" style="overflow-x:auto">${os.filter(o=>o.photo).map(o=>`<div class="ph" style="width:80px;height:80px;background-image:url(${o.photo})"></div>`).join('')||'<span class="sub">Фото жоқ</span>'}</div>
+ <div class="row" style="margin-top:20px"><button class="btn" style="font-size:14px" onclick="tmp.pid=${p.id};go('analyze')">Жаңа фото қосу</button><button class="btn s" style="font-size:14px" onclick="note(${p.id})">Жазба қалдыру</button></div>
+ <button class="btn d" style="margin-top:12px;height:46px;font-size:14px" onclick="if(confirm('Өсімдікті жою керек пе?')){S.plants=S.plants.filter(x=>x.id!=${p.id});S.obs=S.obs.filter(o=>o.pid!=${p.id});save();go('plants')}">Жою</button>`}
+function note(id){const t=prompt('Жазба:');if(t){S.obs.push({id:S.nid++,pid:id,date:today(),status:'nn',note:t,photo:'',g:null});save();toast('Жазба сақталды ✓');render()}}
+function profile(){return `<h1>Менің профилім</h1><div class="card" style="padding:22px;text-align:center;margin-top:16px"><div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(150deg,#a6c29c,#294B35);color:#fff;display:grid;place-items:center;font-size:30px;font-weight:700;margin:0 auto">А</div><h3 style="margin:12px 0 2px">Алия</h3><div class="sub">Өсімдік сүйер</div>
+ <div class="row" style="margin-top:14px"><div class="stat"><b>${S.plants.length}</b><span>Өсімдік</span></div><div class="stat"><b>${S.obs.length}</b><span>Бақылау</span></div><div class="stat"><b>${S.plants.filter(p=>p.status=='ok').length}</b><span>Дені сау</span></div></div></div>
+ <div class="card" style="margin-top:16px;overflow:hidden"><div class="set" onclick="toast('Хабарландырулар қосулы')">Хабарландырулар<span>›</span></div><div class="set" onclick="toast('Күнделік құрылғыңызда сақталады. Фото тек талдау үшін ЖИ серверіне жіберіледі.')">Құпиялылық<span>›</span></div><div class="set" onclick="toast('FloraCare 1.0')">Қосымша туралы<span>›</span></div><div class="set" onclick="S.dark=S.dark?0:1;save();render()">Тақырыпты өзгерту<span>${S.dark?'Қараңғы':'Жарық'} ›</span></div><div class="set">Тіл<span style="color:var(--text2)">Қазақша ›</span></div></div>`}
+render();
+</script></body></html>

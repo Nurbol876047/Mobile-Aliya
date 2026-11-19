@@ -1,0 +1,40 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "flora-web",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "--directory",
+        "_src/build/web",
+        "8080"
+      ],
+      "port": 8080
+    },
+    {
+      "name": "flora-api",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "backend/server.py",
+        "0.0.0.0"
+      ],
+      "port": 8090
+    },
+    {
+      "name": "flora-web-lan",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "--directory",
+        "_src/build/web-lan",
+        "8081",
+        "--bind",
+        "0.0.0.0"
+      ],
+      "port": 8081
+    }
+  ]
+}
