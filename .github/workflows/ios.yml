@@ -1,0 +1,71 @@
+# iOS нұсқасын бұлттағы macOS машинасында құрастыру (жергілікті Mac қажет емес).
+# Flutter жобасы репозиторийдің _src/ қалтасында жатыр, сондықтан барлық қадамдар
+# сол қалтада орындалады (defaults.run.working-directory).
+# Нәтиже: Actions → жұмыс → Artifacts:
+#   floracare-ios-unsigned  — қолтаңбасыз .ipa (Sideloadly/AltStore арқылы орнатылады)
+#   floracare-ios-simulator — Xcode симуляторына арналған .app
+name: Build iOS
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: _src
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+      # ЖИ баптауы: Settings → Secrets and variables → Actions
+      #   vars.AI_BACKEND_URL    — сервердің мекенжайы (ұсынылады, кілт серверде қалады)
+      #   secrets.GEMINI_API_KEY — тікелей режим (кілт қолданба ішіне енеді, тек демо үшін)
+      - name: Build iOS (no code signing)
+        run: >
+          flutter build ios --release --no-codesign
+          --dart-define=AI_BACKEND_URL=${{ vars.AI_BACKEND_URL }}
+          --dart-define=GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+
+      # Қолтаңбасыз .ipa: Payload/Runner.app → zip. Бұл файлды App Store-ға жүктеу
+      # мүмкін емес, бірақ Sideloadly/AltStore оны өз Apple ID-іңізбен қайта қолтаңбалайды.
+      - name: Package unsigned .ipa
+        run: |
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -R Runner.app Payload/
+          zip -qry FloraCare-unsigned.ipa Payload
+          ls -lh FloraCare-unsigned.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: floracare-ios-unsigned
+          path: _src/build/ios/iphoneos/FloraCare-unsigned.ipa
+          if-no-files-found: error
+
+      # Mac-та Xcode симуляторында ашу үшін (қолтаңба қажет емес)
+      - name: Build for iOS Simulator
+        run: flutter build ios --release --simulator
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: floracare-ios-simulator
+          path: _src/build/ios/iphonesimulator/Runner.app
+          if-no-files-found: error
