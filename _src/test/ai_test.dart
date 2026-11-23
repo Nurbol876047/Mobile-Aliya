@@ -104,6 +104,24 @@ void main() {
       expect(a.diagnosis, 'Азот жетіспеушілігі');
     });
 
+    test('ой (thought) және мәтінсіз бөліктер өткізіліп жіберіледі', () {
+      final resp = {
+        'candidates': [
+          {
+            'content': {
+              'parts': [
+                {'thoughtSignature': 'abc'},
+                {'text': 'ойлау...', 'thought': true},
+                {'text': jsonEncode(good())}
+              ]
+            }
+          }
+        ]
+      };
+      final a = AiAnalysis.fromGeminiResponse(resp, model: 'm');
+      expect(a.diagnosis, 'Азот жетіспеушілігі');
+    });
+
     test('бұзылған жауап — ValidationError', () {
       expect(() => AiAnalysis.fromGeminiResponse({'candidates': []}),
           throwsA(isA<ValidationError>()));

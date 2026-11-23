@@ -154,10 +154,10 @@ class AiService {
         }
       }
     }
+    debugPrint('AI: all models failed: $last'); // егжей-тегжей тек логта
     if (busy) {
       throw const ValidationError('err.ai.busy');
     }
-    debugPrint('AI: all models failed: $last'); // егжей-тегжей тек логта
     throw const ValidationError('err.ai.unavailable');
   }
 }

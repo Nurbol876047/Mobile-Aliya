@@ -29,10 +29,16 @@ android {
         versionName = flutter.versionName
     }
 
+    // Committed test key: CI otherwise generates a new debug key on every run,
+    // so each APK has a different signature and can't be installed over the previous one.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
     }

@@ -260,7 +260,10 @@ class AiAnalysis {
   factory AiAnalysis.fromGeminiResponse(Map<String, dynamic> data,
       {String model = '', int ms = 0}) {
     try {
-      final text = data['candidates'][0]['content']['parts'][0]['text'] as String;
+      final parts = data['candidates'][0]['content']['parts'] as List;
+      final text = parts.firstWhere(
+              (p) => p is Map && p['text'] is String && p['thought'] != true)['text']
+          as String;
       return AiAnalysis.fromJson(jsonDecode(text) as Map<String, dynamic>,
           model: model, ms: ms);
     } catch (_) {
