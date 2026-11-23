@@ -61,8 +61,9 @@ jobs:
           if-no-files-found: error
 
       # Mac-та Xcode симуляторында ашу үшін (қолтаңба қажет емес)
+      # Flutter симулятор үшін тек debug режимін қолдайды (release/profile — жоқ)
       - name: Build for iOS Simulator
-        run: flutter build ios --release --simulator
+        run: flutter build ios --debug --simulator
 
       - uses: actions/upload-artifact@v4
         with:
