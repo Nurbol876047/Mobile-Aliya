@@ -1,4 +1,4 @@
-"""FloraCare бэкенді: веб-прототипті таратады және фотоны Gemini арқылы талдайды.
+"""FloraCare бэкенді: веб-прототипті таратады және фотоны OpenAI (GPT) арқылы талдайды.
 
 API кілті тек серверде (.env) сақталады — браузерге/қолданбаға берілмейді.
 Тек стандартты Python кітапханасы қолданылады (pip қажет емес).
@@ -31,10 +31,10 @@ PORT = int(os.getenv("PORT") or os.getenv("FLORACARE_PORT", "8090"))
 MAX_BODY = 12 * 1024 * 1024          # base64 фото ≈ 9 МБ дейін
 ALLOWED_MIME = {"image/jpeg", "image/png", "image/webp"}
 MODELS = [m.strip() for m in os.getenv(
-    "GEMINI_MODELS",
-    "gemini-2.5-flash,gemini-3.1-flash-lite,gemini-flash-lite-latest,gemini-flash-latest",
+    "OPENAI_MODELS",
+    "gpt-4o-mini,gpt-4.1-mini",
 ).split(",") if m.strip()]
-API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+API_URL = "https://api.openai.com/v1/chat/completions"
 TOTAL_BUDGET = 75          # бір талдауға жалпы уақыт шегі, секунд
 RETRY_CODES = {429, 500, 502, 503, 504}   # уақытша қателер — қайталауға болады
 # Flutter веб-нұсқасы басқа порттан сұрайды (мыс. :8080) — тек жергілікті origin-дерге рұқсат.
@@ -62,13 +62,13 @@ def origin_allowed(origin: str) -> bool:
 
 def load_key() -> str:
     """Кілтті ортаның айнымалысынан немесе жоба түбіріндегі .env файлынан оқиды."""
-    key = os.getenv("GEMINI_API_KEY", "").strip()
+    key = os.getenv("OPENAI_API_KEY", "").strip()
     if key:
         return key
     env = PROJECT / ".env"
     if env.is_file():
         for line in env.read_text(encoding="utf-8").splitlines():
-            if line.startswith("GEMINI_API_KEY="):
+            if line.startswith("OPENAI_API_KEY="):
                 return line.split("=", 1)[1].strip().strip('"').strip("'")
     return ""
 
@@ -148,6 +148,63 @@ SCHEMA = {
     "required": ["is_plant", "status", "health_score", "green_pct", "yellow_pct", "brown_pct",
                  "color_explanation", "diagnosis", "summary", "symptoms", "causes", "advice",
                  "prognosis", "urgency", "confidence", "plant_info", "care", "next_check_days"],
+}
+
+# OpenAI-дің strict structured output режимі: барлық өріс "required"-те болуы керек
+# (бос мән қайтаруға болады) және әр объектіде additionalProperties: false болуы керек.
+OPENAI_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "is_plant": {"type": "boolean"},
+        "plant_name": {"type": "string", "description": "Қазақша атауы (Латынша атауы)"},
+        "status": {"type": "string", "enum": ["healthy", "warning", "critical"]},
+        "health_score": {"type": "integer"},
+        "green_pct": {"type": "number"},
+        "yellow_pct": {"type": "number"},
+        "brown_pct": {"type": "number"},
+        "color_explanation": {"type": "string"},
+        "diagnosis": {"type": "string", "description": "Қысқа қорытынды, 2–6 сөз"},
+        "summary": {"type": "string"},
+        "symptoms": {"type": "array", "items": {"type": "string"}},
+        "causes": {"type": "array", "items": {"type": "string"}},
+        "advice": {"type": "array", "items": {"type": "string"}},
+        "prognosis": {"type": "string"},
+        "urgency": {"type": "string", "enum": ["low", "medium", "high"]},
+        "confidence": {"type": "number", "description": "0..1"},
+        "photo_quality_note": {"type": "string"},
+        "plant_info": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "latin_name": {"type": "string"},
+                "family": {"type": "string"},
+                "origin": {"type": "string"},
+                "description": {"type": "string"},
+                "toxicity": {"type": "string"},
+                "fun_fact": {"type": "string"},
+            },
+            "required": ["latin_name", "family", "origin", "description", "toxicity", "fun_fact"],
+        },
+        "care": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "light": {"type": "string"},
+                "watering": {"type": "string"},
+                "temperature": {"type": "string"},
+                "humidity": {"type": "string"},
+                "soil": {"type": "string"},
+                "fertilizer": {"type": "string"},
+            },
+            "required": ["light", "watering", "temperature", "humidity", "soil", "fertilizer"],
+        },
+        "next_check_days": {"type": "integer"},
+    },
+    "required": ["is_plant", "plant_name", "status", "health_score", "green_pct", "yellow_pct", "brown_pct",
+                 "color_explanation", "diagnosis", "summary", "symptoms", "causes", "advice",
+                 "prognosis", "urgency", "confidence", "photo_quality_note", "plant_info", "care",
+                 "next_check_days"],
 }
 
 
@@ -234,26 +291,32 @@ def log(msg: str):
     sys.stderr.write(time.strftime("%d/%b/%Y %H:%M:%S ") + msg + "\n")
 
 
-def call_gemini(mime: str, b64: str, plant: str = "", species: str = "", lang: str = "kk") -> dict:
+def call_openai(mime: str, b64: str, plant: str = "", species: str = "", lang: str = "kk") -> dict:
     """Модельдерді кезекпен сынайды; уақытша қатеде (503/429/таймаут) бір рет қайталайды."""
     if not API_KEY:
         raise AnalysisError("ЖИ қызметі баптаулмаған.", 503, "not_configured")
     ctx = ""
     if plant or species:
         ctx = f"\nПайдаланушы бұл өсімдікті «{plant[:60]}» деп атаған" + (f" (түрі: {species[:60]})" if species else "") + "."
-    contents = [{"role": "user", "parts": [
-        {"text": PROMPT.replace("{context}", ctx) + LANG_DIRECTIVE.get(lang, LANG_DIRECTIVE["kk"])},
-        {"inline_data": {"mime_type": mime, "data": b64}},
+    prompt_text = PROMPT.replace("{context}", ctx) + LANG_DIRECTIVE.get(lang, LANG_DIRECTIVE["kk"])
+    messages = [{"role": "user", "content": [
+        {"type": "text", "text": prompt_text},
+        {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{b64}"}},
     ]}]
 
     started = time.time()
     attempts: list[str] = []
     busy = False
     for model in MODELS:
-        gen = {"temperature": 0.2, "responseMimeType": "application/json", "responseSchema": SCHEMA}
-        if model.startswith("gemini-2.5"):
-            gen["thinkingConfig"] = {"thinkingBudget": 1024}   # жылдамырақ, сапасы жеткілікті
-        body = json.dumps({"contents": contents, "generationConfig": gen}).encode()
+        body = json.dumps({
+            "model": model,
+            "messages": messages,
+            "temperature": 0.2,
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {"name": "plant_analysis", "strict": True, "schema": OPENAI_SCHEMA},
+            },
+        }).encode()
 
         for attempt in (1, 2):
             left = TOTAL_BUDGET - (time.time() - started)
@@ -261,8 +324,8 @@ def call_gemini(mime: str, b64: str, plant: str = "", species: str = "", lang: s
                 break
             t0 = time.time()
             req = urllib.request.Request(
-                API_URL.format(model=model), data=body, method="POST",
-                headers={"Content-Type": "application/json", "x-goog-api-key": API_KEY},
+                API_URL, data=body, method="POST",
+                headers={"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"},
             )
             try:
                 with urllib.request.urlopen(req, timeout=min(35, left)) as resp:
@@ -274,10 +337,10 @@ def call_gemini(mime: str, b64: str, plant: str = "", species: str = "", lang: s
                 except Exception:
                     pass
                 attempts.append(f"{model}#{attempt}: HTTP {e.code}")
-                log(f"gemini {model} try {attempt}: HTTP {e.code} {detail} ({time.time()-t0:.1f}s)")
-                if e.code in (400, 401, 403) and "API key" in detail:
+                log(f"openai {model} try {attempt}: HTTP {e.code} {detail} ({time.time()-t0:.1f}s)")
+                if e.code in (401, 403):
                     raise AnalysisError("ЖИ қызметінің кілті жарамсыз.", 502, "key")
-                # 429 «quota» — күндік шектеу таусылған: қайталаудың мәні жоқ,
+                # 429 «insufficient_quota» — лимит/баланс таусылған: қайталаудың мәні жоқ,
                 # бірден келесі модельге көшеміз (уақыт үнемделеді).
                 quota_exhausted = e.code == 429 and "quota" in detail.lower()
                 if e.code in RETRY_CODES and not quota_exhausted:
@@ -288,17 +351,17 @@ def call_gemini(mime: str, b64: str, plant: str = "", species: str = "", lang: s
                 break                     # 404, quota т.б. — келесі модель
             except (urllib.error.URLError, TimeoutError, OSError) as e:
                 attempts.append(f"{model}#{attempt}: {type(e).__name__}")
-                log(f"gemini {model} try {attempt}: {e} ({time.time()-t0:.1f}s)")
+                log(f"openai {model} try {attempt}: {e} ({time.time()-t0:.1f}s)")
                 busy = True
                 break                     # таймаут — уақытты үнемдеп, келесі модельге
             try:
-                text = data["candidates"][0]["content"]["parts"][0]["text"]
+                text = data["choices"][0]["message"]["content"]
                 result = normalize(json.loads(text))
             except (KeyError, IndexError, TypeError, json.JSONDecodeError):
                 attempts.append(f"{model}#{attempt}: bad format")
-                log(f"gemini {model} try {attempt}: unexpected response format")
+                log(f"openai {model} try {attempt}: unexpected response format")
                 break
-            log(f"gemini {model} try {attempt}: OK ({time.time()-t0:.1f}s)")
+            log(f"openai {model} try {attempt}: OK ({time.time()-t0:.1f}s)")
             return {"model": "", "result": result}
 
     detail = "; ".join(attempts) or "жауап жоқ"
@@ -355,7 +418,7 @@ class Handler(SimpleHTTPRequestHandler):
             mime, b64 = parse_data_url(payload.get("image", ""))
             t0 = time.time()
             lang = str(payload.get("lang", "kk"))
-            out = call_gemini(mime, b64, str(payload.get("plant", "")), str(payload.get("species", "")),
+            out = call_openai(mime, b64, str(payload.get("plant", "")), str(payload.get("species", "")),
                               lang if lang in LANG_DIRECTIVE else "kk")
             out.update(ok=True, ms=int((time.time() - t0) * 1000))
             return self._json(200, out)
