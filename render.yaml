@@ -8,6 +8,10 @@ services:
     envVars:
       - key: OPENAI_API_KEY
         sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
       - key: FLORACARE_EXTRA_ORIGINS
         value: https://nurbol876047.github.io
     healthCheckPath: /api/health

@@ -67,12 +67,25 @@ def origin_allowed(origin: str) -> bool:
 # ---------------------------------------------------------------------------
 # Деректер базасы: қолданбаның бүкіл күйі (өсімдіктер, бақылаулар, баптаулар)
 # бір JSON жол ретінде сақталады — клиент бұрын localStorage-ке не жазса, енді
-# сол блок серверде, SQLite-те сақталады да, кез келген құрылғыда көрінеді.
+# сол блок серверде сақталады да, кез келген құрылғыда көрінеді.
+#
+# Екі режим бар:
+# - SUPABASE_URL/SUPABASE_KEY берілсе — сыртқы Supabase Postgres (REST арқылы,
+#   pip қажет емес): Render қайта деплой жасаса да деректер жоғалмайды.
+# - берілмесе — жергілікті SQLite файлы (тек даму/ойнату үшін; Render-дің
+#   тегін жоспарында диск эфемерлі, деректер қайта деплойда ысырылады).
 # ---------------------------------------------------------------------------
+SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip().rstrip("/")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "").strip()
+SUPABASE_TABLE = os.getenv("SUPABASE_TABLE", "app_state").strip() or "app_state"
+USE_SUPABASE = bool(SUPABASE_URL and SUPABASE_KEY)
+
 DB_LOCK = threading.Lock()
 
 
 def init_db() -> None:
+    if USE_SUPABASE:
+        return
     with sqlite3.connect(DB_PATH) as con:
         con.execute(
             "CREATE TABLE IF NOT EXISTS state ("
@@ -82,7 +95,7 @@ def init_db() -> None:
         )
 
 
-def get_state() -> dict | None:
+def _sqlite_get_state() -> dict | None:
     with DB_LOCK, sqlite3.connect(DB_PATH) as con:
         row = con.execute("SELECT data FROM state WHERE id = 1").fetchone()
     if not row:
@@ -93,7 +106,7 @@ def get_state() -> dict | None:
         return None
 
 
-def set_state(obj: dict) -> None:
+def _sqlite_set_state(obj: dict) -> None:
     raw = json.dumps(obj, ensure_ascii=False)
     with DB_LOCK, sqlite3.connect(DB_PATH) as con:
         con.execute(
@@ -101,6 +114,51 @@ def set_state(obj: dict) -> None:
             "ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at",
             (raw, time.time()),
         )
+
+
+def _supabase_request(method: str, path: str, body=None, extra_headers: dict | None = None):
+    url = f"{SUPABASE_URL}/rest/v1/{path}"
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json",
+    }
+    if extra_headers:
+        headers.update(extra_headers)
+    data = json.dumps(body).encode() if body is not None else None
+    req = urllib.request.Request(url, data=data, method=method, headers=headers)
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        raw = resp.read()
+    return json.loads(raw) if raw else None
+
+
+def _supabase_get_state() -> dict | None:
+    try:
+        rows = _supabase_request("GET", f"{SUPABASE_TABLE}?id=eq.1&select=data")
+    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError) as e:
+        log(f"supabase get_state failed: {e}")
+        return None
+    if rows and isinstance(rows, list) and rows[0].get("data") is not None:
+        return rows[0]["data"]
+    return None
+
+
+def _supabase_set_state(obj: dict) -> None:
+    _supabase_request(
+        "POST", SUPABASE_TABLE, body={"id": 1, "data": obj},
+        extra_headers={"Prefer": "resolution=merge-duplicates,return=minimal"},
+    )
+
+
+def get_state() -> dict | None:
+    return _supabase_get_state() if USE_SUPABASE else _sqlite_get_state()
+
+
+def set_state(obj: dict) -> None:
+    if USE_SUPABASE:
+        _supabase_set_state(obj)
+    else:
+        _sqlite_set_state(obj)
 
 
 init_db()
@@ -487,7 +545,11 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json(400, {"ok": False, "code": "bad_json", "error": "JSON қате."})
         if not isinstance(obj, dict):
             return self._json(400, {"ok": False, "code": "bad_json", "error": "Күй объект болуы керек."})
-        set_state(obj)
+        try:
+            set_state(obj)
+        except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError, sqlite3.Error) as e:
+            log(f"set_state failed: {e}")
+            return self._json(502, {"ok": False, "code": "db_unavailable", "error": "Сақтау мүмкін болмады."})
         return self._json(200, {"ok": True})
 
 
