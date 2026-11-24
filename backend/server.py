@@ -12,7 +12,9 @@ import binascii
 import json
 import os
 import re
+import sqlite3
 import sys
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -23,6 +25,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 PROJECT = ROOT.parent
 STATIC_DIR = PROJECT / "web_prototype"
+DB_PATH = Path(os.getenv("FLORACARE_DB", str(PROJECT / "floracare.db")))
+STATE_MAX_BODY = 30 * 1024 * 1024    # фотолары бар бүкіл қолданба күйі (JSON)
 
 # Әдепкіде тек осы компьютер. Телефоннан кіру үшін: python3 backend/server.py 0.0.0.0
 HOST = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") \
@@ -58,6 +62,48 @@ EXTRA_ORIGINS = {
 
 def origin_allowed(origin: str) -> bool:
     return bool(origin) and (bool(CORS_RE.match(origin)) or origin.rstrip("/") in EXTRA_ORIGINS)
+
+
+# ---------------------------------------------------------------------------
+# Деректер базасы: қолданбаның бүкіл күйі (өсімдіктер, бақылаулар, баптаулар)
+# бір JSON жол ретінде сақталады — клиент бұрын localStorage-ке не жазса, енді
+# сол блок серверде, SQLite-те сақталады да, кез келген құрылғыда көрінеді.
+# ---------------------------------------------------------------------------
+DB_LOCK = threading.Lock()
+
+
+def init_db() -> None:
+    with sqlite3.connect(DB_PATH) as con:
+        con.execute(
+            "CREATE TABLE IF NOT EXISTS state ("
+            "id INTEGER PRIMARY KEY CHECK (id = 1), "
+            "data TEXT NOT NULL, "
+            "updated_at REAL NOT NULL)"
+        )
+
+
+def get_state() -> dict | None:
+    with DB_LOCK, sqlite3.connect(DB_PATH) as con:
+        row = con.execute("SELECT data FROM state WHERE id = 1").fetchone()
+    if not row:
+        return None
+    try:
+        return json.loads(row[0])
+    except json.JSONDecodeError:
+        return None
+
+
+def set_state(obj: dict) -> None:
+    raw = json.dumps(obj, ensure_ascii=False)
+    with DB_LOCK, sqlite3.connect(DB_PATH) as con:
+        con.execute(
+            "INSERT INTO state (id, data, updated_at) VALUES (1, ?, ?) "
+            "ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at",
+            (raw, time.time()),
+        )
+
+
+init_db()
 
 
 def load_key() -> str:
@@ -405,9 +451,13 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith("/api/health"):
             return self._json(200, {"ok": True, "ai": bool(API_KEY)})
+        if self.path.startswith("/api/state"):
+            return self._json(200, {"ok": True, "state": get_state()})
         return super().do_GET()
 
     def do_POST(self):
+        if self.path.startswith("/api/state"):
+            return self._handle_state_save()
         if not self.path.startswith("/api/analyze"):
             return self._json(404, {"ok": False, "error": "Табылмады"})
         length = int(self.headers.get("Content-Length") or 0)
@@ -426,6 +476,19 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json(400, {"ok": False, "code": "bad_json", "error": "JSON қате."})
         except AnalysisError as e:
             return self._json(e.status, {"ok": False, "code": e.code, "error": str(e)})
+
+    def _handle_state_save(self):
+        length = int(self.headers.get("Content-Length") or 0)
+        if length <= 0 or length > STATE_MAX_BODY:
+            return self._json(413, {"ok": False, "code": "too_big", "error": "Күй деректері тым үлкен немесе бос."})
+        try:
+            obj = json.loads(self.rfile.read(length))
+        except json.JSONDecodeError:
+            return self._json(400, {"ok": False, "code": "bad_json", "error": "JSON қате."})
+        if not isinstance(obj, dict):
+            return self._json(400, {"ok": False, "code": "bad_json", "error": "Күй объект болуы керек."})
+        set_state(obj)
+        return self._json(200, {"ok": True})
 
 
 if __name__ == "__main__":

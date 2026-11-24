@@ -5,3 +5,4 @@ _src/secrets.json
 flora_care/secrets.json
 backend/server.log
 __pycache__/
+floracare.db

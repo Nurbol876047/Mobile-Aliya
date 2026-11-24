@@ -191,14 +191,18 @@ const RES={ok:'Қалыпты түс',wy:'Түсінің өзгеруі байқ
 const bd=s=>`<span class="badge ${s}"><i class="dot"></i>${ST[s]}</span>`;
 let S={plants:[],obs:[],nid:1,seen:0,dark:0};
 try{const r=localStorage.getItem('fc');if(r)S=JSON.parse(r)}catch(e){}
-(function cleanup(){const demo={1:'Монстера',2:'Сансевиерия',3:'Фикус'};
+function cleanup(){const demo={1:'Монстера',2:'Сансевиерия',3:'Фикус'};
  const gone=S.plants.filter(p=>demo[p.id]===p.name).map(p=>p.id);
  S.plants=S.plants.filter(p=>!gone.includes(p.id));S.obs=S.obs.filter(o=>!gone.includes(o.pid)&&!(o.id<=2&&!o.photo&&!o.ai));
  // ешқашан талданбаған өсімдікке «дені сау» деп жазбаймыз
  S.plants.forEach(p=>{const os=S.obs.filter(o=>o.pid==p.id&&o.ai);if(!os.length){p.status='nn';p.last=''}});
- if(!S.nid||S.nid<1)S.nid=1;try{localStorage.setItem('fc',JSON.stringify(S))}catch(e){}})();
+ if(!S.nid||S.nid<1)S.nid=1}
+cleanup();try{localStorage.setItem('fc',JSON.stringify(S))}catch(e){}
 const lastTxt=p=>p.last?'Соңғы бақылау: '+fd(p.last):'Әлі бақылау жоқ';
-const save=()=>{try{localStorage.setItem('fc',JSON.stringify(S))}catch(e){toast('Жад толды: фото сақталмады')}};
+const save=()=>{
+ try{localStorage.setItem('fc',JSON.stringify(S))}catch(e){toast('Жад толды: фото сақталмады')}
+ fetch('/api/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)}).catch(()=>{});
+};
 let V='home',vw=0,flt='all',q='',dq='',dflt='all',cur=null,obi=0,tmp={photo:'',ai:null,pid:null,note:'',busy:0},form={};
 const I={home:'<path d="M3 11l9-8 9 8M5 10v10h14V10"/>',plants:'<path d="M12 21V11M12 15c-5 0-8-3-8-8 5 0 8 3 8 8Zm0-3c0-4 3-7 8-7 0 5-3 7-8 7Z"/>',analyze:'<circle cx="12" cy="12" r="4"/><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/>',diary:'<path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2V4ZM9 9h6M9 13h6"/>',profile:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>'};
 const TL={home:'Басты бет',plants:'Өсімдіктерім',analyze:'Талдау',diary:'Күнделік',profile:'Профиль'};
@@ -219,6 +223,8 @@ function onb(){const O=[['Өсімдіктеріңізді бақылаңыз','
 function home(){const n=S.plants.length,ok=S.plants.filter(p=>p.status=='ok').length,att=S.plants.filter(p=>p.status=='wy'||p.status=='dg').length,rec=[...S.obs].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,3);
  const hero=S.plants[0];
  return `<div class="row sp"><div><p class="sub">Қайырлы күн!</p><h1 style="font-size:23px">Өсімдіктеріңіз қалай?</h1></div><div class="ic" onclick="toast(n_msg())">🔔</div></div>
+ ${n?`<div class="row sp" style="margin-top:18px;align-items:baseline"><h3 style="margin:0">Менің өсімдіктерім (${n})</h3><span class="sub" style="cursor:pointer" onclick="go('plants')">Барлығын көру ›</span></div>
+ <div class="row" style="gap:10px;overflow-x:auto;padding:2px 2px 6px">${S.plants.map(p=>`<div class="card" style="min-width:92px;max-width:92px;padding:8px;cursor:pointer" onclick="go('detail',${p.id})">${ph(p)}<b style="font-size:12px;display:block;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.name)}</b></div>`).join('').replace(/class="ph /g,'style="width:76px;height:76px;border-radius:14px" class="ph ')}</div>`:''}
  ${hero?`<div class="ph lf hero ${hero.photo?'':'g0'}" style="height:200px;margin-top:18px;border-radius:28px;${hero.photo?`background-image:url(${hero.photo})`:''}"><div style="position:absolute;left:18px;bottom:16px;color:#fff;z-index:2"><b style="font-size:20px">${esc(hero.name)}</b><div style="font-size:13px;opacity:.9">${lastTxt(hero)}</div></div></div>`:`<div class="card" style="padding:22px;margin-top:18px;text-align:center"><div style="font-size:34px">📷</div><b style="display:block;font-size:17px;margin-top:6px">Өсімдікті сканерлеңіз</b><p class="sub" style="margin:6px 0 14px">Жапырақты суретке түсіріңіз — ЖИ оның жағдайын бағалайды. Нәтижені бірден күнделікке сақтауға болады.</p><button class="btn" onclick="go('analyze')">✦ Фото сканерлеу</button><button class="btn s" style="margin-top:10px" onclick="form={};go('add')">＋ Өсімдікті қолмен қосу</button></div>`}
  <div class="row" style="margin-top:14px"><div class="card stat"><b>${n}</b><span>Барлық өсімдік</span></div><div class="card stat"><b style="color:var(--primary-bright)">${ok}</b><span>Дені сау</span></div><div class="card stat"><b style="color:var(--clay)">${att}</b><span>Назар аудару қажет</span></div></div>
  <h3>Соңғы бақылаулар</h3>${rec.length?rec.map(o=>{const p=S.plants.find(x=>x.id==o.pid)||{};return `<div class="card row" style="padding:10px;margin-bottom:10px" onclick="go('detail',${p.id})">${ph(p,'')}<div style="flex:1"><b>${esc(p.name)}</b><div class="sub" style="margin:2px 0 6px">${fd(o.date)}</div>${bd(o.status)}</div></div>`}).join('').replace(/class="ph /g,'style="width:62px;height:62px;border-radius:14px" class="ph '):`<div class="card empty sub">Әзірге бақылау жоқ</div>`}
@@ -335,4 +341,11 @@ function profile(){return `<h1>Менің профилім</h1><div class="card"
  <div class="row" style="margin-top:14px"><div class="stat"><b>${S.plants.length}</b><span>Өсімдік</span></div><div class="stat"><b>${S.obs.length}</b><span>Бақылау</span></div><div class="stat"><b>${S.plants.filter(p=>p.status=='ok').length}</b><span>Дені сау</span></div></div></div>
  <div class="card" style="margin-top:16px;overflow:hidden"><div class="set" onclick="toast('Хабарландырулар қосулы')">Хабарландырулар<span>›</span></div><div class="set" onclick="toast('Күнделік құрылғыңызда сақталады. Фото тек талдау үшін ЖИ серверіне жіберіледі.')">Құпиялылық<span>›</span></div><div class="set" onclick="toast('FloraCare 1.0')">Қосымша туралы<span>›</span></div><div class="set" onclick="S.dark=S.dark?0:1;save();render()">Тақырыпты өзгерту<span>${S.dark?'Қараңғы':'Жарық'} ›</span></div><div class="set">Тіл<span style="color:var(--text2)">Қазақша ›</span></div></div>`}
 render();
+fetch('/api/state').then(r=>r.json()).then(j=>{
+ if(!(j&&j.ok&&j.state&&typeof j.state=='object'))return;
+ S=Object.assign({plants:[],obs:[],nid:1,seen:0,dark:0},j.state);
+ cleanup();
+ try{localStorage.setItem('fc',JSON.stringify(S))}catch(e){}
+ render();
+}).catch(()=>{});
 </script></body></html>
