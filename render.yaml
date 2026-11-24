@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: floracare-backend
+    env: python
+    plan: free
+    buildCommand: "true"
+    startCommand: "python3 backend/server.py 0.0.0.0"
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: FLORACARE_EXTRA_ORIGINS
+        value: https://nurbol876047.github.io
+    healthCheckPath: /api/health

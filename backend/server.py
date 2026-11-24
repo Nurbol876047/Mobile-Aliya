@@ -27,7 +27,7 @@ STATIC_DIR = PROJECT / "web_prototype"
 # Әдепкіде тек осы компьютер. Телефоннан кіру үшін: python3 backend/server.py 0.0.0.0
 HOST = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") \
     else os.getenv("FLORACARE_HOST", "127.0.0.1")
-PORT = int(os.getenv("FLORACARE_PORT", "8090"))
+PORT = int(os.getenv("PORT") or os.getenv("FLORACARE_PORT", "8090"))
 MAX_BODY = 12 * 1024 * 1024          # base64 фото ≈ 9 МБ дейін
 ALLOWED_MIME = {"image/jpeg", "image/png", "image/webp"}
 MODELS = [m.strip() for m in os.getenv(
@@ -40,7 +40,7 @@ RETRY_CODES = {429, 500, 502, 503, 504}   # уақытша қателер — қ
 # Flutter веб-нұсқасы басқа порттан сұрайды (мыс. :8080) — тек жергілікті origin-дерге рұқсат.
 # Мобильді қолданба (Android/iOS) Origin тақырыбын жібермейді, оған CORS қажет емес.
 # Жергілікті origin-дер: localhost және үй желісінің жеке IP-лері
-# (телефоннан Wi-Fi арқылы ашу үшін). Интернеттегі домендерге рұқсат берілмейді.
+# (телефоннан Wi-Fi арқылы ашу үшін).
 CORS_RE = re.compile(
     r"^https?://("
     r"localhost|127\.0\.0\.1|\[::1\]"
@@ -49,6 +49,15 @@ CORS_RE = re.compile(
     r"|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}"
     r")(:\d+)?$"
 )
+# Өндірістегі веб-қолданба үшін нақты рұқсат етілген origin-дер (мыс. GitHub Pages),
+# үтірмен бөлек FLORACARE_EXTRA_ORIGINS айнымалысы арқылы беріледі.
+EXTRA_ORIGINS = {
+    o.strip().rstrip("/") for o in os.getenv("FLORACARE_EXTRA_ORIGINS", "").split(",") if o.strip()
+}
+
+
+def origin_allowed(origin: str) -> bool:
+    return bool(origin) and (bool(CORS_RE.match(origin)) or origin.rstrip("/") in EXTRA_ORIGINS)
 
 
 def load_key() -> str:
@@ -308,7 +317,7 @@ class Handler(SimpleHTTPRequestHandler):
 
     def end_headers(self):
         origin = self.headers.get("Origin", "")
-        if origin and CORS_RE.match(origin):
+        if origin_allowed(origin):
             self.send_header("Access-Control-Allow-Origin", origin)
             self.send_header("Vary", "Origin")
             self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
