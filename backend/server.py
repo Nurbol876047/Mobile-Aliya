@@ -1,4 +1,6 @@
-"""FloraCare бэкенді: веб-прототипті таратады және фотоны OpenAI (GPT) арқылы талдайды.
+"""FloraCare бэкенді: Flutter қолданбасының веб-нұсқасын таратады және фотоны OpenAI (GPT) арқылы талдайды.
+
+Веб-нұсқа мобильді қолданбамен бір кодтан (_src/) жиналады: scripts/build_web.sh.
 
 API кілті тек серверде (.env) сақталады — браузерге/қолданбаға берілмейді.
 Тек стандартты Python кітапханасы қолданылады (pip қажет емес).
@@ -24,7 +26,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 PROJECT = ROOT.parent
-STATIC_DIR = PROJECT / "web_prototype"
+STATIC_DIR = PROJECT / "_src" / "build" / "web"
 DB_PATH = Path(os.getenv("FLORACARE_DB", str(PROJECT / "floracare.db")))
 STATE_MAX_BODY = 30 * 1024 * 1024    # фотолары бар бүкіл қолданба күйі (JSON)
 
@@ -490,7 +492,9 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
             self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("Cache-Control", "no-store")
+        # API жауаптары кэштелмейді; статика әр ашқанда тексеріледі (өзгермесе — 304),
+        # сондықтан жаңа деплой бірден көрінеді, ал ауыр файлдар қайта жүктелмейді.
+        self.send_header("Cache-Control", "no-store" if self.path.startswith("/api/") else "no-cache")
         super().end_headers()
 
     def _json(self, status: int, payload: dict):
@@ -554,5 +558,10 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    if not (STATIC_DIR / "index.html").is_file():
+        warning = f"Веб-нұсқа жиналмаған ({STATIC_DIR}). Іске қосыңыз: bash scripts/build_web.sh"
+        if os.getenv("RENDER"):     # хостингте бос сайт шықпасын: деплой тоқтайды, ескі нұсқа қалады
+            sys.exit(warning)
+        print(f"{warning} — тек API жұмыс істейді.")
     print(f"FloraCare: http://{HOST}:{PORT}  (ЖИ: {'қосулы' if API_KEY else 'кілт жоқ'}, модельдер: {', '.join(MODELS)})")
     ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()

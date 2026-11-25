@@ -66,6 +66,20 @@ flutter test
 
 ## 3. Құрастыру
 
+**Бір код — барлық жерде.** `main`-ге push жасалғанда бәрі осы `_src/` қалтасынан жиналады:
+
+| Қайда | Қалай жиналады |
+|---|---|
+| Render (сайт + API) — https://floracare-backend-ynkm.onrender.com | `render.yaml` → `scripts/build_web.sh` |
+| GitHub Pages — https://nurbol876047.github.io/Mobile-Aliya/ | `.github/workflows/pages.yml` |
+| Android APK | `.github/workflows/android.yml` → Artifacts |
+| iOS | `.github/workflows/ios.yml` → Artifacts |
+
+Жергілікті компьютерде сайтты Render-дегідей ашу (жоба түбірінде):
+```bash
+bash scripts/build_web.sh && python3 backend/server.py   # http://127.0.0.1:8090
+```
+
 **Android APK / AAB:**
 ```bash
 flutter build apk --release          # build/app/outputs/flutter-apk/app-release.apk
@@ -125,7 +139,7 @@ Android үшін камера рұқсаты `image_picker` арқылы сұр�
 
 **Серверді іске қосу** (жоба түбірінде, тек стандартты Python):
 ```bash
-echo "GEMINI_API_KEY=сіздің_кілтіңіз" > .env     # бір рет
+echo "OPENAI_API_KEY=сіздің_кілтіңіз" > .env     # бір рет
 python3 backend/server.py                          # http://127.0.0.1:8090
 FLORACARE_HOST=0.0.0.0 python3 backend/server.py   # телефоннан Wi-Fi арқылы қосылу үшін
 ```

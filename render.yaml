@@ -3,7 +3,7 @@ services:
     name: floracare-backend
     env: python
     plan: free
-    buildCommand: "true"
+    buildCommand: "bash scripts/build_web.sh"
     startCommand: "python3 backend/server.py 0.0.0.0"
     envVars:
       - key: OPENAI_API_KEY

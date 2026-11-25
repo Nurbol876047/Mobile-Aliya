@@ -20,7 +20,8 @@ import 'logic.dart';
 class AiService {
   static const String backendUrl = String.fromEnvironment('AI_BACKEND_URL');
   static const String apiKey = String.fromEnvironment('GEMINI_API_KEY');
-  static const Duration timeout = Duration(seconds: 45);
+  // Render-дің тегін жоспарында ұйықтап қалған сервер ≈1 минутта оянады.
+  static const Duration timeout = Duration(seconds: 100);
 
   static bool get enabled => backendUrl.isNotEmpty || apiKey.isNotEmpty;
 

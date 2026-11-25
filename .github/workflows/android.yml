@@ -13,6 +13,11 @@ defaults:
   run:
     working-directory: _src
 
+# Барлық нұсқа (APK, iOS, веб) бір серверге қосылады. Басқа сервер керек болса:
+# Settings → Secrets and variables → Actions → vars.AI_BACKEND_URL
+env:
+  AI_BACKEND_URL: ${{ vars.AI_BACKEND_URL || 'https://floracare-backend-ynkm.onrender.com' }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -38,15 +43,10 @@ jobs:
       - name: Test
         run: flutter test
 
-      # ЖИ баптауы (міндетті емес): Settings → Secrets and variables → Actions
-      #   vars.AI_BACKEND_URL    — сервердің мекенжайы (ұсынылады, кілт серверде қалады)
-      #   secrets.GEMINI_API_KEY — тікелей режим (кілт APK ішіне енеді, тек демо үшін)
-      # Екеуі де бос болса, қолданба ЖИ-сіз, тек түс талдауымен жұмыс істейді.
       - name: Build release APK
         run: >
           flutter build apk --release
-          --dart-define=AI_BACKEND_URL=${{ vars.AI_BACKEND_URL }}
-          --dart-define=GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+          --dart-define=AI_BACKEND_URL=$AI_BACKEND_URL
 
       - uses: actions/upload-artifact@v4
         with:
@@ -56,7 +56,7 @@ jobs:
 
       # Веб-нұсқаны да жинап, артефакт ретінде береміз (қаласаңыз, браузерден ашуға).
       - name: Build web
-        run: flutter build web --release
+        run: flutter build web --release --dart-define=AI_BACKEND_URL=$AI_BACKEND_URL
 
       - uses: actions/upload-artifact@v4
         with:
